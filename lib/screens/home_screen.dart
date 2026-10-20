@@ -127,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             horizontal: 16, vertical: 10),
                       ),
                       child: const Text(
-                        'Lihat Detail Itinerary',
+                        'Lihat Detail Perjalanan',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 13),
                       ),
@@ -176,17 +176,29 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 28),
 
               const Text(
-                'Kategori Populer',
+                'Ringkasan Perjalanan',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildCategoryCard(Icons.landscape_rounded, 'Gunung', primaryColor),
-                  _buildCategoryCard(Icons.beach_access_rounded, 'Pantai', primaryColor),
-                  _buildCategoryCard(Icons.location_city_rounded, 'Kota', primaryColor),
-                  _buildCategoryCard(Icons.forest_rounded, 'Hutan', primaryColor),
+                  Expanded(
+                    child: _buildStatCard(
+                      icon: Icons.map_rounded,
+                      title: 'Total Trip',
+                      value: '2 Rencana',
+                      primaryColor: primaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      icon: Icons.account_balance_wallet_rounded,
+                      title: 'Est. Total Biaya',
+                      value: 'Rp 1.175.000',
+                      primaryColor: primaryColor,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 28),
@@ -223,79 +235,82 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.explore_outlined,
                 primaryColor: primaryColor,
               ),
-              const SizedBox(height: 16),
-
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: OutlinedButton.icon(
-                  onPressed: _navigateToTripList,
-                  icon: const Icon(Icons.format_list_bulleted_rounded),
-                  label: const Text(
-                    'Lihat Semua Rencana Perjalanan',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: primaryColor,
-                    side: BorderSide(color: primaryColor, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-              ),
               const SizedBox(height: 12),
             ],
+          ),
+        ),
+      ),
+
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+          color: const Color(0xFFF8F9FA),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: _navigateToTripList,
+              icon: const Icon(Icons.format_list_bulleted_rounded),
+              label: const Text(
+                'Lihat Semua Rencana Perjalanan',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: primaryColor,
+                side: BorderSide(color: primaryColor, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildCategoryCard(IconData icon, String title, Color primaryColor) {
-    return InkWell(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Filter kategori: $title')),
-        );
-        _navigateToTripList();
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 76,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+  Widget _buildStatCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color primaryColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: primaryColor, size: 24),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
+            child: Icon(icon, color: primaryColor, size: 22),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+          ),
+        ],
       ),
     );
   }

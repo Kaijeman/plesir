@@ -69,7 +69,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Detail Itinerary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text('Detail Perjalanan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: Colors.white,
         elevation: 0.5,
         surfaceTintColor: Colors.white,
@@ -124,9 +124,39 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            tripData['judul'],
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  tripData['judul'],
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              IconButton(
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                                icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.blueAccent),
+                                onPressed: () async {
+                                  final result = await Navigator.pushNamed(
+                                    context,
+                                    '/trip-form',
+                                    arguments: {
+                                      'isEdit': true,
+                                      'judul': tripData['judul'],
+                                      'tgl_mulai': DateTime(2026, 10, 25),
+                                      'tgl_selesai': DateTime(2026, 10, 26),
+                                    },
+                                  );
+                                  if (result == true && context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Rencana perjalanan berhasil diperbarui!')),
+                                    );
+                                    _refreshData();
+                                  }
+                                },
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -136,6 +166,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -287,15 +318,46 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                           'Biaya: ${akt['biaya']}',
                                           style: const TextStyle(fontSize: 12, color: Colors.black87),
                                         ),
-                                        IconButton(
-                                          constraints: const BoxConstraints(),
-                                          padding: EdgeInsets.zero,
-                                          icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
-                                          onPressed: () {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('${akt['tempat']} dihapus')),
-                                            );
-                                          },
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              constraints: const BoxConstraints(),
+                                              padding: EdgeInsets.zero,
+                                              icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.blueAccent),
+                                              onPressed: () async {
+                                                final result = await Navigator.pushNamed(
+                                                  context,
+                                                  '/activity-form',
+                                                  arguments: {
+                                                    'isEdit': true,
+                                                    'tempat': akt['tempat'],
+                                                    'kategori': akt['kategori'],
+                                                    'biaya': akt['biaya'],
+                                                    'catatan': akt['catatan'],
+                                                    'startTime': const TimeOfDay(hour: 8, minute: 0),
+                                                    'endTime': const TimeOfDay(hour: 10, minute: 0),
+                                                  },
+                                                );
+                                                if (result == true && context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('Aktivitas ${akt['tempat']} berhasil diperbarui!')),
+                                                  );
+                                                  _refreshData();
+                                                }
+                                              },
+                                            ),
+                                            const SizedBox(width: 12),
+                                            IconButton(
+                                              constraints: const BoxConstraints(),
+                                              padding: EdgeInsets.zero,
+                                              icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
+                                              onPressed: () {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('${akt['tempat']} dihapus')),
+                                                );
+                                              },
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),

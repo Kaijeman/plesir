@@ -17,8 +17,35 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
   TimeOfDay? _endTime;
   String? _selectedCategory;
   bool _isLoading = false;
+  bool _isInit = true;
+  bool _isEdit = false;
 
   final List<String> _categories = ['Gunung', 'Pantai', 'Kota', 'Hutan', 'Kuliner', 'Transportasi'];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isInit) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args != null && args is Map<String, dynamic>) {
+        _isEdit = args['isEdit'] ?? false;
+        if (_isEdit) {
+          _placeController.text = args['tempat'] ?? '';
+          _costController.text = (args['biaya'] ?? '').replaceAll('Rp ', '').replaceAll('.', '');
+          _noteController.text = args['catatan'] ?? '';
+          _selectedCategory = args['kategori'];
+
+          if (args['startTime'] != null && args['startTime'] is TimeOfDay) {
+            _startTime = args['startTime'];
+          }
+          if (args['endTime'] != null && args['endTime'] is TimeOfDay) {
+            _endTime = args['endTime'];
+          }
+        }
+      }
+      _isInit = false;
+    }
+  }
 
   @override
   void dispose() {
@@ -31,7 +58,7 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
   Future<void> _selectTime(BuildContext context, bool isStart) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: isStart ? (_startTime ?? TimeOfDay.now()) : (_endTime ?? TimeOfDay.now()),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -88,7 +115,10 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Tambah Aktivitas Harian', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          _isEdit ? 'Edit Aktivitas Harian' : 'Tambah Aktivitas Harian',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         backgroundColor: Colors.white,
         elevation: 0.5,
         surfaceTintColor: Colors.white,
@@ -235,7 +265,10 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
                       width: 24, height: 24,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                     )
-                        : const Text('Simpan Aktivitas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        : Text(
+                      _isEdit ? 'Simpan Perubahan' : 'Simpan Aktivitas',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],

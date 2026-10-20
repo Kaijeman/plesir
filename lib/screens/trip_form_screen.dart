@@ -13,6 +13,25 @@ class _TripFormScreenState extends State<TripFormScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   bool _isLoading = false;
+  bool _isInit = true;
+  bool _isEdit = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isInit) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args != null && args is Map<String, dynamic>) {
+        _isEdit = args['isEdit'] ?? false;
+        if (_isEdit) {
+          _titleController.text = args['judul'] ?? '';
+          _startDate = args['tgl_mulai'];
+          _endDate = args['tgl_selesai'];
+        }
+      }
+      _isInit = false;
+    }
+  }
 
   @override
   void dispose() {
@@ -26,7 +45,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
       initialDate: isStart
           ? (_startDate ?? DateTime.now())
           : (_endDate ?? _startDate ?? DateTime.now()),
-      firstDate: DateTime.now(),
+      firstDate: DateTime(2020),
       lastDate: DateTime(2030),
       builder: (context, child) {
         return Theme(
@@ -82,7 +101,10 @@ class _TripFormScreenState extends State<TripFormScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Buat Rencana Baru', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          _isEdit ? 'Edit Rencana Perjalanan' : 'Buat Rencana Baru',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         backgroundColor: Colors.white,
         elevation: 0.5,
         surfaceTintColor: Colors.white,
@@ -199,7 +221,10 @@ class _TripFormScreenState extends State<TripFormScreen> {
                         width: 24, height: 24,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)
                     )
-                        : const Text('Simpan Rencana', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        : Text(
+                      _isEdit ? 'Simpan Perubahan' : 'Simpan Rencana',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],

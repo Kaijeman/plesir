@@ -15,15 +15,15 @@ class _TripListScreenState extends State<TripListScreen> {
         'id': '1',
         'judul': 'Liburan ke Bali',
         'tgl_mulai': '25 Okt 2026',
-        'tgl_selesai': '30 Okt 2026',
-        'durasi': '6 Hari',
+        'tgl_selesai': '26 Okt 2026',
+        'durasi': '2 Hari',
       },
       {
         'id': '2',
         'judul': 'Liburan ke Bali',
         'tgl_mulai': '25 Okt 2026',
-        'tgl_selesai': '30 Okt 2026',
-        'durasi': '6 Hari',
+        'tgl_selesai': '26 Okt 2026',
+        'durasi': '2 Hari',
       },
     ];
   }
@@ -102,7 +102,7 @@ class _TripListScreenState extends State<TripListScreen> {
                             ),
                             child: Icon(Icons.explore_outlined, color: primaryColor, size: 28),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,6 +117,7 @@ class _TripListScreenState extends State<TripListScreen> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
+                                    const SizedBox(width: 6),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(
@@ -135,17 +136,25 @@ class _TripListScreenState extends State<TripListScreen> {
                                   children: [
                                     const Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey),
                                     const SizedBox(width: 6),
-                                    Text(
-                                      '${trip['tgl_mulai']} - ${trip['tgl_selesai']}',
-                                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                    Expanded(
+                                      child: Text(
+                                        '${trip['tgl_mulai']} - ${trip['tgl_selesai']}',
+                                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ],
                                 ),
                               ],
                             ),
                           ),
+                          const SizedBox(width: 8),
+
                           IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+                            constraints: const BoxConstraints(),
+                            padding: const EdgeInsets.all(6),
+                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('${trip['judul']} dihapus')),
