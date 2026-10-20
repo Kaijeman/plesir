@@ -8,72 +8,154 @@ class TripListScreen extends StatefulWidget {
 }
 
 class _TripListScreenState extends State<TripListScreen> {
-  // Simulasi asinkron mengambil data dari database (misal: SQLite/API)
   Future<List<Map<String, String>>> _fetchTrips() async {
-    // Simulasi loading selama 1.5 detik
-    await Future.delayed(const Duration(seconds: 1, milliseconds: 500));
-
-    // Data tiruan berdasarkan ERD tabel 'perjalanan'
+    await Future.delayed(const Duration(seconds: 1));
     return [
-      {'judul': 'Liburan ke Bali', 'tgl_mulai': '25 Okt 2026', 'tgl_selesai': '30 Okt 2026'},
-      {'judul': 'Pendakian Semeru', 'tgl_mulai': '12 Nov 2026', 'tgl_selesai': '15 Nov 2026'},
+      {
+        'id': '1',
+        'judul': 'Liburan ke Bali',
+        'tgl_mulai': '25 Okt 2026',
+        'tgl_selesai': '30 Okt 2026',
+        'durasi': '6 Hari',
+      },
+      {
+        'id': '2',
+        'judul': 'Liburan ke Bali',
+        'tgl_mulai': '25 Okt 2026',
+        'tgl_selesai': '30 Okt 2026',
+        'durasi': '6 Hari',
+      },
     ];
   }
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Rencana Perjalanan Saya', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Rencana Perjalanan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        surfaceTintColor: Colors.white,
       ),
-      // FutureBuilder untuk menangani state asinkron (loading, error, success)
       body: FutureBuilder<List<Map<String, String>>>(
         future: _fetchTrips(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator(color: primaryColor));
           } else if (snapshot.hasError) {
             return Center(child: Text('Terjadi kesalahan: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Belum ada rencana perjalanan.'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.flight_takeoff_outlined, size: 72, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  const Text('Belum ada rencana perjalanan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
+                  const SizedBox(height: 8),
+                  const Text('Tekan tombol + di bawah untuk membuat', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                ],
+              ),
+            );
           }
 
           final trips = snapshot.data!;
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             itemCount: trips.length,
             itemBuilder: (context, index) {
               final trip = trips[index];
-              return Card(
-                elevation: 2,
+              return Container(
                 margin: const EdgeInsets.only(bottom: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      shape: BoxShape.circle,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                    child: Icon(Icons.flight_takeoff, color: Theme.of(context).colorScheme.primary),
-                  ),
-                  title: Text(trip['judul']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: Text('${trip['tgl_mulai']} - ${trip['tgl_selesai']}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () {
-                      // Nantinya ini akan memanggil fungsi asinkron untuk menghapus data di DB
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${trip['judul']} dihapus')),
-                      );
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () {
+                      Navigator.pushNamed(context, '/trip-detail');
                     },
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(Icons.explore_outlined, color: primaryColor, size: 28),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        trip['judul']!,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: primaryColor.withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        trip['durasi']!,
+                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: primaryColor),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${trip['tgl_mulai']} - ${trip['tgl_selesai']}',
+                                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('${trip['judul']} dihapus')),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  onTap: () {
-                    Navigator.pushNamed(context, '/trip-detail');
-                  },
                 ),
               );
             },
@@ -81,21 +163,20 @@ class _TripListScreenState extends State<TripListScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 3,
         onPressed: () async {
-          // Menunggu kembalian dari halaman Form (menggunakan await)
           final result = await Navigator.pushNamed(context, '/trip-form');
-
-          // Jika proses simpan di form berhasil dan mengirim flag 'true'
           if (result == true && context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Rencana perjalanan berhasil disimpan!')),
             );
-            // Nantinya di sini kita panggil fungsi untuk me-refresh data dari database
             setState(() {});
           }
         },
-        icon: const Icon(Icons.add),
-        label: const Text('Buat Rencana'),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Buat Rencana', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }
