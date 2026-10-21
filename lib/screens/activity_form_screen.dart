@@ -138,7 +138,7 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -163,7 +163,7 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
                       const Text('Kategori Aktivitas', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: _selectedCategory,
+                        initialValue: _selectedCategory,
                         hint: const Text('Pilih Kategori', style: TextStyle(color: Colors.grey, fontSize: 14)),
                         decoration: _buildInputDecoration(
                           hintText: 'Pilih Kategori',

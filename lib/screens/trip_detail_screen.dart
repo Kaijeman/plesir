@@ -103,7 +103,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -114,7 +114,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: primaryColor.withOpacity(0.1),
+                        color: primaryColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(Icons.map_rounded, color: primaryColor, size: 28),
@@ -231,7 +231,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: primaryColor.withOpacity(0.06),
+                              color: primaryColor.withValues(alpha: 0.06),
                               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                             ),
                             child: Row(
@@ -295,7 +295,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: primaryColor.withOpacity(0.1),
+                                            color: primaryColor.withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(
