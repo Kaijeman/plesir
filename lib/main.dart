@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'config/env.dart';
+import 'config/routes.dart';
 
-import 'screens/home_screen.dart';
-import 'screens/trip_list_screen.dart';
-import 'screens/trip_detail_screen.dart';
-import 'screens/trip_form_screen.dart';
-import 'screens/activity_form_screen.dart';
-
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  SystemChrome.setPreferredOrientations([
+  await Supabase.initialize(
+    url: Env.supabaseUrl,
+    publishableKey: Env.supabasePublishableKey,
+  );
+
+  await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
-  ]).then((_) {
-    runApp(const PlesirApp());
-  });
+  ]);
+
+  runApp(const PlesirApp());
 }
 
 class PlesirApp extends StatelessWidget {
@@ -33,14 +35,8 @@ class PlesirApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      initialRoute: '/home',
-      routes: {
-        '/home': (context) => const HomeScreen(),
-        '/trip-list': (context) => const TripListScreen(),
-        '/trip-detail': (context) => const TripDetailScreen(),
-        '/trip-form': (context) => const TripFormScreen(),
-        '/activity-form': (context) => const ActivityFormScreen(),
-      },
+      initialRoute: AppRoutes.home,
+      routes: AppRoutes.routes,
     );
   }
 }
