@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../controllers/trip_controller.dart';
 
 class TripFormScreen extends StatefulWidget {
   const TripFormScreen({super.key});
@@ -10,6 +11,9 @@ class TripFormScreen extends StatefulWidget {
 class _TripFormScreenState extends State<TripFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
+  final TripController _controller = TripController();
+
+  String? _tripId;
   DateTime? _startDate;
   DateTime? _endDate;
   bool _isLoading = false;
@@ -24,6 +28,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
       if (args != null && args is Map<String, dynamic>) {
         _isEdit = args['isEdit'] ?? false;
         if (_isEdit) {
+          _tripId = args['id']?.toString();
           _titleController.text = args['judul'] ?? '';
           _startDate = args['tgl_mulai'];
           _endDate = args['tgl_selesai'];
@@ -85,11 +90,33 @@ class _TripFormScreenState extends State<TripFormScreen> {
       }
 
       setState(() => _isLoading = true);
-      await Future.delayed(const Duration(seconds: 1));
-      setState(() => _isLoading = false);
+      try {
+        if (_isEdit && _tripId != null) {
+          await _controller.updateTrip(
+            id: _tripId!,
+            judul: _titleController.text,
+            tglMulai: _startDate!,
+            tglSelesai: _endDate!,
+          );
+        } else {
+          await _controller.createTrip(
+            judul: _titleController.text,
+            tglMulai: _startDate!,
+            tglSelesai: _endDate!,
+          );
+        }
 
-      if (mounted) {
-        Navigator.pop(context, true);
+        if (mounted) {
+          Navigator.pop(context, true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal menyimpan: $e')),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
     }
   }
@@ -218,8 +245,9 @@ class _TripFormScreenState extends State<TripFormScreen> {
                     onPressed: _isLoading ? null : _saveTrip,
                     child: _isLoading
                         ? const SizedBox(
-                        width: 24, height: 24,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                     )
                         : Text(
                       _isEdit ? 'Simpan Perubahan' : 'Simpan Rencana',

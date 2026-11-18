@@ -11,8 +11,34 @@ class TripListScreen extends StatefulWidget {
 class _TripListScreenState extends State<TripListScreen> {
   final TripController _controller = TripController();
 
-  Future<List<Map<String, dynamic>>> _fetchTrips() {
-    return _controller.getTrips();
+  Future<void> _confirmDelete(Map<String, dynamic> trip) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Perjalanan?'),
+        content: Text('Yakin ingin menghapus "${trip['judul']}" beserta seluruh aktivitasnya?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _controller.deleteTrip(trip['id']);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${trip['judul']} dihapus')),
+        );
+      }
+    }
   }
 
   @override
@@ -30,145 +56,146 @@ class _TripListScreenState extends State<TripListScreen> {
         elevation: 0.5,
         surfaceTintColor: Colors.white,
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-      future: _fetchTrips(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator(color: primaryColor));
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Terjadi kesalahan: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.flight_takeoff_outlined,
-                  size: 72,
-                  color: Colors.grey.shade400,
+      body: ValueListenableBuilder<int>(
+        valueListenable: _controller.refreshNotifier,
+        builder: (context, _, _) {
+          return FutureBuilder<List<Map<String, dynamic>>>(
+          future: _controller.getTrips(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator(color: primaryColor));
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Terjadi kesalahan: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.flight_takeoff_outlined,
+                      size: 72,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Belum ada rencana perjalanan',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Tekan tombol + di bawah untuk membuat',
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Belum ada rencana perjalanan',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Tekan tombol + di bawah untuk membuat',
-                  style: TextStyle(fontSize: 13, color: Colors.grey),
-                ),
-              ],
-            ),
-          );
-        }
+              );
+            }
 
-        final trips = snapshot.data!;
+            final trips = snapshot.data!;
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(20),
-          itemCount: trips.length,
-          itemBuilder: (context, index) {
-            final trip = trips[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+            return ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: trips.length,
+              itemBuilder: (context, index) {
+                final trip = trips[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () {
-                    Navigator.pushNamed(context, '/trip-detail');
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Icon(Icons.explore_outlined, color: primaryColor, size: 28),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/trip-detail', arguments: trip['id']);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: primaryColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Icon(Icons.explore_outlined, color: primaryColor, size: 28),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      trip['judul'] ?? '',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          trip['judul'] ?? '',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: primaryColor.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          trip['durasi'] ?? '',
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: primaryColor),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: primaryColor.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      trip['durasi'] ?? '',
-                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: primaryColor),
-                                    ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          '${trip['tgl_mulai']} - ${trip['tgl_selesai']}',
+                                          style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      '${trip['tgl_mulai']} - ${trip['tgl_selesai']}',
-                                      style: const TextStyle(fontSize: 13, color: Colors.grey),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              constraints: const BoxConstraints(),
+                              padding: const EdgeInsets.all(6),
+                              icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                              onPressed: () => _confirmDelete(trip),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          constraints: const BoxConstraints(),
-                          padding: const EdgeInsets.all(6),
-                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${trip['judul']} dihapus')),
-                            );
-                          },
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
-        );
-      },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: primaryColor,
@@ -180,7 +207,6 @@ class _TripListScreenState extends State<TripListScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Rencana perjalanan berhasil disimpan!')),
             );
-            setState(() {});
           }
         },
         icon: const Icon(Icons.add_rounded),

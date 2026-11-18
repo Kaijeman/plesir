@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../controllers/auth_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -8,47 +9,102 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool _isLoggedIn = false;
-  String _userName = 'Pengelana Plesir';
-  String _userEmail = 'user@gmail.com';
-  String _lastSyncTime = 'Belum pernah';
+  final AuthController _authController = AuthController();
+  bool _isLoading = false;
+  String _lastSyncTime = 'Tersinkronisasi otomatis';
 
-  void _handleGoogleLogin() {
-    setState(() {
-      _isLoggedIn = true;
-      _userName = 'Pengelana';
-      _userEmail = 'pengelana@gmail.com';
-      _lastSyncTime = 'Hari ini, 14:30';
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Berhasil terhubung dengan Google!')),
-    );
+  String _currentTimeFormatted() {
+    final now = DateTime.now();
+    final h = now.hour.toString().padLeft(2, '0');
+    final m = now.minute.toString().padLeft(2, '0');
+    return 'Hari ini, $h:$m';
   }
 
-  void _handleLogout() {
-    setState(() {
-      _isLoggedIn = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Berhasil keluar. Kembali ke mode Tamu.')),
-    );
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      await _authController.loginWithGoogle();
+      if (!mounted) return;
+      setState(() {
+        _lastSyncTime = _currentTimeFormatted();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Berhasil terhubung dengan Google & data disinkronkan!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal login: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
-  void _handleSync() {
-    setState(() {
-      _lastSyncTime = 'Baru saja';
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Data berhasil disinkronkan!')),
+  Future<void> _handleLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Keluar Akun?', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text(
+          'Data perjalananmu tetap tersimpan aman di akun Google dan akan muncul kembali saat kamu login lagi.\n\nData lokal di perangkat ini akan dibersihkan untuk menjaga privasi akun.',
+          style: TextStyle(height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+            child: const Text('Ya, Keluar', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
+
+    if (confirm != true) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _authController.logout();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Berhasil keluar. Kembali ke mode Tamu.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleSync() async {
+    setState(() => _isLoading = true);
+    try {
+      await _authController.syncNow();
+      if (!mounted) return;
+      setState(() {
+        _lastSyncTime = _currentTimeFormatted();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data berhasil disinkronkan!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal sinkronisasi: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
+    final isLoggedIn = _authController.isLoggedIn;
+    final avatarUrl = _authController.userAvatarUrl;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -82,8 +138,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     CircleAvatar(
                       radius: 30,
                       backgroundColor: primaryColor.withValues(alpha: 0.1),
-                      child: Icon(
-                        _isLoggedIn ? Icons.person_rounded : Icons.person_outline_rounded,
+                      backgroundImage: (isLoggedIn && avatarUrl != null) ? NetworkImage(avatarUrl) : null,
+                      child: (isLoggedIn && avatarUrl != null)
+                          ? null
+                          : Icon(
+                        isLoggedIn ? Icons.person_rounded : Icons.person_outline_rounded,
                         size: 36,
                         color: primaryColor,
                       ),
@@ -94,15 +153,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _isLoggedIn ? _userName : 'Pengguna Tamu',
+                            isLoggedIn ? _authController.userName : 'Pengguna Tamu',
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _isLoggedIn ? _userEmail : 'Penyimpanan Perangkat',
+                            isLoggedIn ? _authController.userEmail : 'Penyimpanan Perangkat',
                             style: TextStyle(
                               fontSize: 13,
-                              color: _isLoggedIn ? Colors.grey.shade700 : Colors.grey,
+                              color: isLoggedIn ? Colors.grey.shade700 : Colors.grey,
                             ),
                           ),
                         ],
@@ -113,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              if (!_isLoggedIn) ...[
+              if (!isLoggedIn) ...[
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -148,8 +207,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: _handleGoogleLogin,
-                    icon: Image.network(
+                    onPressed: _isLoading ? null : _handleGoogleLogin,
+                    icon: _isLoading
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                        : Image.network(
                       'https://cdn-icons-png.flaticon.com/512/300/300221.png',
                       height: 22,
                       width: 22,
@@ -157,9 +222,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         return const Icon(Icons.g_mobiledata_rounded, size: 28);
                       },
                     ),
-                    label: const Text(
-                      'Masuk dengan Google',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    label: Text(
+                      _isLoading ? 'Menghubungkan...' : 'Masuk dengan Google',
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -207,9 +272,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          onPressed: _handleSync,
+                          onPressed: _isLoading ? null : _handleSync,
                           icon: const Icon(Icons.sync_rounded, size: 18),
-                          label: const Text('Sinkronkan Data Sekarang', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          label: Text(
+                            _isLoading ? 'Menyinkronkan...' : 'Sinkronkan Data Sekarang',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
                         ),
                       ),
                     ],
@@ -228,7 +296,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: _handleLogout,
+                    onPressed: _isLoading ? null : _handleLogout,
                     icon: const Icon(Icons.logout_rounded, size: 20),
                     label: const Text('Keluar Akun', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   ),

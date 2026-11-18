@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../controllers/trip_controller.dart';
 
 class ActivityFormScreen extends StatefulWidget {
   const ActivityFormScreen({super.key});
@@ -12,6 +13,12 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
   final TextEditingController _placeController = TextEditingController();
   final TextEditingController _costController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
+  final TripController _controller = TripController();
+
+  String? _activityId;
+  String? _tripId;
+  int _totalHari = 1;
+  int _selectedDay = 1;
 
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
@@ -29,9 +36,14 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args != null && args is Map<String, dynamic>) {
         _isEdit = args['isEdit'] ?? false;
+        _tripId = args['trip_id']?.toString();
+        _totalHari = (args['total_hari'] as int?) ?? 1;
+        _selectedDay = (args['hari_ke'] as int?) ?? 1;
+
         if (_isEdit) {
+          _activityId = args['id']?.toString();
           _placeController.text = args['tempat'] ?? '';
-          _costController.text = (args['biaya'] ?? '').replaceAll('Rp ', '').replaceAll('.', '');
+          _costController.text = (args['biaya'] ?? '').toString().replaceAll('Rp ', '').replaceAll('.', '');
           _noteController.text = args['catatan'] ?? '';
           _selectedCategory = args['kategori'];
 
@@ -53,6 +65,12 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
     _costController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+
+  String _formatTime24(TimeOfDay t) {
+    final h = t.hour.toString().padLeft(2, '0');
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m';
   }
 
   Future<void> _selectTime(BuildContext context, bool isStart) async {
@@ -97,13 +115,52 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
         );
         return;
       }
+      if (_tripId == null || _tripId!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ID perjalanan tidak ditemukan!')),
+        );
+        return;
+      }
+
+      final parsedCost = int.tryParse(_costController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
 
       setState(() => _isLoading = true);
-      await Future.delayed(const Duration(seconds: 1));
-      setState(() => _isLoading = false);
+      try {
+        if (_isEdit && _activityId != null) {
+          await _controller.updateActivity(
+            id: _activityId!,
+            hariKe: _selectedDay,
+            jamMulai: _formatTime24(_startTime!),
+            jamSelesai: _formatTime24(_endTime!),
+            tempat: _placeController.text,
+            kategori: _selectedCategory!,
+            biaya: parsedCost,
+            catatan: _noteController.text,
+          );
+        } else {
+          await _controller.createActivity(
+            tripId: _tripId!,
+            hariKe: _selectedDay,
+            jamMulai: _formatTime24(_startTime!),
+            jamSelesai: _formatTime24(_endTime!),
+            tempat: _placeController.text,
+            kategori: _selectedCategory!,
+            biaya: parsedCost,
+            catatan: _noteController.text,
+          );
+        }
 
-      if (mounted) {
-        Navigator.pop(context, true);
+        if (mounted) {
+          Navigator.pop(context, true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal menyimpan aktivitas: $e')),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
     }
   }
@@ -111,6 +168,7 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
+    final dayOptions = List.generate(_totalHari < 1 ? 1 : _totalHari, (i) => i + 1);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -147,6 +205,26 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (dayOptions.length > 1) ...[
+                        const Text('Jadwal Hari', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<int>(
+                          initialValue: dayOptions.contains(_selectedDay) ? _selectedDay : 1,
+                          decoration: _buildInputDecoration(
+                            hintText: 'Pilih Hari',
+                            icon: Icons.today_rounded,
+                            primaryColor: primaryColor,
+                          ),
+                          items: dayOptions.map((day) {
+                            return DropdownMenuItem(value: day, child: Text('Hari ke-$day', style: const TextStyle(fontSize: 14)));
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) setState(() => _selectedDay = val);
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+
                       const Text('Nama Tempat / Aktivitas', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
                       const SizedBox(height: 8),
                       TextFormField(
@@ -262,7 +340,8 @@ class _ActivityFormScreenState extends State<ActivityFormScreen> {
                     onPressed: _isLoading ? null : _saveActivity,
                     child: _isLoading
                         ? const SizedBox(
-                      width: 24, height: 24,
+                      width: 24,
+                      height: 24,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                     )
                         : Text(
