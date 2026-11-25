@@ -5,8 +5,6 @@ class SupabaseService {
 
   String? get currentUserId => _client.auth.currentUser?.id;
 
-  // ==================== TRIPS CLOUD CRUD ====================
-
   Future<List<Map<String, dynamic>>> getTrips() async {
     final response = await _client
         .from('trips')
@@ -47,8 +45,6 @@ class SupabaseService {
     if (currentUserId == null) return;
     await _client.from('trips').delete().eq('id', id);
   }
-
-  // ==================== ACTIVITIES CLOUD CRUD ====================
 
   Future<List<Map<String, dynamic>>> getActivitiesByTrip(String tripId) async {
     final response = await _client

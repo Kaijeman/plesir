@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../controllers/trip_controller.dart';
+import '../widgets/empty_state_widget.dart';
+import '../widgets/trip_card.dart';
 
 class TripListScreen extends StatefulWidget {
   const TripListScreen({super.key});
@@ -67,26 +69,11 @@ class _TripListScreenState extends State<TripListScreen> {
             } else if (snapshot.hasError) {
               return Center(child: Text('Terjadi kesalahan: ${snapshot.error}'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.flight_takeoff_outlined,
-                      size: 72,
-                      color: Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Belum ada rencana perjalanan',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Tekan tombol + di bawah untuk membuat',
-                      style: TextStyle(fontSize: 13, color: Colors.grey),
-                    ),
-                  ],
+              return const Center(
+                child: EmptyStateWidget(
+                  icon: Icons.flight_takeoff_outlined,
+                  title: 'Belum ada rencana perjalanan',
+                  subtitle: 'Tekan tombol + di bawah untuk membuat',
                 ),
               );
             }
@@ -98,96 +85,21 @@ class _TripListScreenState extends State<TripListScreen> {
               itemCount: trips.length,
               itemBuilder: (context, index) {
                 final trip = trips[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(16),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () {
-                        Navigator.pushNamed(context, '/trip-detail', arguments: trip['id']);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: primaryColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Icon(Icons.explore_outlined, color: primaryColor, size: 28),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          trip['judul'] ?? '',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: primaryColor.withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          trip['durasi'] ?? '',
-                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: primaryColor),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey),
-                                      const SizedBox(width: 6),
-                                      Expanded(
-                                        child: Text(
-                                          '${trip['tgl_mulai']} - ${trip['tgl_selesai']}',
-                                          style: const TextStyle(fontSize: 13, color: Colors.grey),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              constraints: const BoxConstraints(),
-                              padding: const EdgeInsets.all(6),
-                              icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
-                              onPressed: () => _confirmDelete(trip),
-                            ),
-                          ],
-                        ),
-                      ),
+                return TripCard(
+                  title: trip['judul'] ?? '',
+                  dateRange: '${trip['tgl_mulai']} - ${trip['tgl_selesai']}',
+                  duration: trip['durasi'] ?? '',
+                  primaryColor: primaryColor,
+                  onTap: () {
+                    Navigator.pushNamed(context, '/trip-detail', arguments: trip['id']);
+                  },
+                  trailing: Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: IconButton(
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(6),
+                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                      onPressed: () => _confirmDelete(trip),
                     ),
                   ),
                 );
@@ -201,13 +113,8 @@ class _TripListScreenState extends State<TripListScreen> {
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 3,
-        onPressed: () async {
-          final result = await Navigator.pushNamed(context, '/trip-form');
-          if (result == true && context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Rencana perjalanan berhasil disimpan!')),
-            );
-          }
+        onPressed: () {
+          Navigator.pushNamed(context, '/trip-form');
         },
         icon: const Icon(Icons.add_rounded),
         label: const Text('Buat Rencana', style: TextStyle(fontWeight: FontWeight.bold)),

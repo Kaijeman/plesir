@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../controllers/trip_controller.dart';
+import '../widgets/form_fields.dart';
+import '../widgets/primary_button.dart';
 
 class TripFormScreen extends StatefulWidget {
   const TripFormScreen({super.key});
@@ -98,16 +100,27 @@ class _TripFormScreenState extends State<TripFormScreen> {
             tglMulai: _startDate!,
             tglSelesai: _endDate!,
           );
+
+          if (mounted) {
+            Navigator.pop(context, true);
+          }
         } else {
-          await _controller.createTrip(
+          final newTripId = await _controller.createTrip(
             judul: _titleController.text,
             tglMulai: _startDate!,
             tglSelesai: _endDate!,
           );
-        }
 
-        if (mounted) {
-          Navigator.pop(context, true);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Rencana perjalanan berhasil dibuat!')),
+            );
+            Navigator.pushReplacementNamed(
+              context,
+              '/trip-detail',
+              arguments: newTripId,
+            );
+          }
         }
       } catch (e) {
         if (mounted) {
@@ -164,65 +177,58 @@ class _TripFormScreenState extends State<TripFormScreen> {
                         'Judul Perjalanan',
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
                       ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _titleController,
-                        decoration: InputDecoration(
-                          hintText: 'Cth: Liburan Musim Panas di Bali',
-                          hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-                          prefixIcon: Icon(Icons.flight_takeoff_rounded, color: primaryColor, size: 22),
-                          filled: true,
-                          fillColor: const Color(0xFFF8F9FA),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey.shade300),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, bottom: 20),
+                        child: TextFormField(
+                          controller: _titleController,
+                          decoration: buildAppInputDecoration(
+                            hintText: 'Cth: Liburan Musim Panas di Bali',
+                            icon: Icons.flight_takeoff_rounded,
+                            primaryColor: primaryColor,
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: primaryColor, width: 1.5),
-                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Judul perjalanan tidak boleh kosong';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Judul perjalanan tidak boleh kosong';
-                          }
-                          return null;
-                        },
                       ),
-                      const SizedBox(height: 20),
-
                       Row(
                         children: [
                           Expanded(
-                            child: _buildDatePicker(
-                              context: context,
+                            child: AppPickerField(
                               label: 'Tanggal Mulai',
-                              selectedDate: _startDate,
+                              displayText: _startDate != null
+                                  ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
+                                  : 'Pilih Tgl',
+                              hasValue: _startDate != null,
+                              icon: Icons.calendar_today_rounded,
                               primaryColor: primaryColor,
                               onTap: () => _selectDate(context, true),
                             ),
                           ),
-                          const SizedBox(width: 12),
                           Expanded(
-                            child: _buildDatePicker(
-                              context: context,
-                              label: 'Tanggal Selesai',
-                              selectedDate: _endDate,
-                              primaryColor: primaryColor,
-                              onTap: () {
-                                if (_startDate == null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Pilih tanggal mulai terlebih dahulu')),
-                                  );
-                                  return;
-                                }
-                                _selectDate(context, false);
-                              },
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 12),
+                              child: AppPickerField(
+                                label: 'Tanggal Selesai',
+                                displayText: _endDate != null
+                                    ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
+                                    : 'Pilih Tgl',
+                                hasValue: _endDate != null,
+                                icon: Icons.calendar_today_rounded,
+                                primaryColor: primaryColor,
+                                onTap: () {
+                                  if (_startDate == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Pilih tanggal mulai terlebih dahulu')),
+                                    );
+                                    return;
+                                  }
+                                  _selectDate(context, false);
+                                },
+                              ),
                             ),
                           ),
                         ],
@@ -230,83 +236,19 @@ class _TripFormScreenState extends State<TripFormScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 28),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    onPressed: _isLoading ? null : _saveTrip,
-                    child: _isLoading
-                        ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                    )
-                        : Text(
-                      _isEdit ? 'Simpan Perubahan' : 'Simpan Rencana',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                PrimaryButton(
+                  label: _isEdit ? 'Simpan Perubahan' : 'Simpan Rencana',
+                  primaryColor: primaryColor,
+                  isLoading: _isLoading,
+                  margin: const EdgeInsets.only(top: 28),
+                  onPressed: _saveTrip,
                 ),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildDatePicker({
-    required BuildContext context,
-    required String label,
-    required DateTime? selectedDate,
-    required Color primaryColor,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FA),
-              border: Border.all(color: Colors.grey.shade200),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    selectedDate != null
-                        ? "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}"
-                        : "Pilih Tgl",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: selectedDate != null ? FontWeight.w600 : FontWeight.normal,
-                      color: selectedDate != null ? Colors.black87 : Colors.grey,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Icon(Icons.calendar_today_rounded, size: 18, color: primaryColor),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

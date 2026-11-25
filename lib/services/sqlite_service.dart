@@ -59,8 +59,6 @@ class SqliteService {
     );
   }
 
-  // ==================== TRIPS LOCAL CRUD ====================
-
   Future<List<Map<String, Object?>>> getTripsLocal() async {
     final db = await database;
     return await db.query(
@@ -107,8 +105,6 @@ class SqliteService {
     await db.delete('trips', where: 'id = ?', whereArgs: [id]);
   }
 
-  // ==================== ACTIVITIES LOCAL CRUD ====================
-
   Future<List<Map<String, Object?>>> getActivitiesByTripLocal(String tripId) async {
     final db = await database;
     return await db.query(
@@ -151,8 +147,6 @@ class SqliteService {
     final db = await database;
     await db.delete('activities', where: 'id = ?', whereArgs: [id]);
   }
-
-  // ==================== SYNC HELPERS ====================
 
   Future<List<Map<String, Object?>>> getUnsyncedTrips() async {
     final db = await database;

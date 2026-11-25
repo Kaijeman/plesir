@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../controllers/trip_controller.dart';
+import '../widgets/day_schedule_card.dart';
+import '../widgets/empty_state_widget.dart';
 
 class TripDetailScreen extends StatefulWidget {
   const TripDetailScreen({super.key});
@@ -102,6 +104,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
               child: Row(
                 children: [
                   Container(
+                    margin: const EdgeInsets.only(right: 14),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: primaryColor.withValues(alpha: 0.1),
@@ -109,7 +112,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                     ),
                     child: Icon(Icons.map_rounded, color: primaryColor, size: 28),
                   ),
-                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,35 +151,40 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${tripData['tgl_mulai']} - ${tripData['tgl_selesai']} (${hariList.length} Hari)',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            '${tripData['tgl_mulai']} - ${tripData['tgl_selesai']} (${hariList.length} Hari)',
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text('Total Est.', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                      Text(
-                        tripData['total_biaya'],
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryColor),
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text('Total Est.', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        Text(
+                          tripData['total_biaya'],
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryColor),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
 
-            const Text(
-              'Jadwal Aktivitas Harian',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            const Padding(
+              padding: EdgeInsets.only(top: 24, bottom: 12),
+              child: Text(
+                'Jadwal Aktivitas Harian',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
-            const SizedBox(height: 12),
 
             if (activeHariList.isEmpty)
               Container(
@@ -188,15 +195,12 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                   border: Border.all(color: Colors.grey.shade200),
                 ),
                 child: const Center(
-                  child: Column(
-                    children: [
-                      Icon(Icons.event_note_outlined, size: 48, color: Colors.grey),
-                      SizedBox(height: 12),
-                      Text(
-                        'Belum ada aktivitas yang dijadwalkan.',
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
-                      ),
-                    ],
+                  child: EmptyStateWidget(
+                    icon: Icons.event_note_outlined,
+                    iconSize: 48,
+                    iconColor: Colors.grey,
+                    title: 'Belum ada aktivitas yang dijadwalkan.',
+                    titleStyle: TextStyle(color: Colors.grey, fontSize: 14),
                   ),
                 ),
               )
@@ -206,174 +210,44 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: activeHariList.length,
                 itemBuilder: (context, index) {
-                  final hari = activeHariList[index];
-                  final List aktivitasList = hari['aktivitas'];
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withValues(alpha: 0.06),
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.today_rounded, size: 18, color: primaryColor),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Hari ${hari['hari_ke']}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: primaryColor,
-                                    ),
-                                  ),
-                                  Text(
-                                    ' • ${hari['tgl_spesifik']}',
-                                    style: const TextStyle(fontSize: 13, color: Colors.black54),
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                '${aktivitasList.length} Aktivitas',
-                                style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: aktivitasList.length,
-                          separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.shade100),
-                          itemBuilder: (context, aktIndex) {
-                            final akt = aktivitasList[aktIndex];
-                            return Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(Icons.access_time_rounded, size: 15, color: primaryColor),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            akt['jam'],
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                              color: primaryColor,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: primaryColor.withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          akt['kategori'],
-                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: primaryColor),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    akt['tempat'],
-                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Biaya: ${akt['biaya']}',
-                                        style: const TextStyle(fontSize: 12, color: Colors.black87),
-                                      ),
-                                      Row(
-                                        children: [
-                                          IconButton(
-                                            constraints: const BoxConstraints(),
-                                            padding: EdgeInsets.zero,
-                                            icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.blueAccent),
-                                            onPressed: () async {
-                                              final result = await Navigator.pushNamed(
-                                                context,
-                                                '/activity-form',
-                                                arguments: {
-                                                  'isEdit': true,
-                                                  'id': akt['id'],
-                                                  'trip_id': tripData['id'],
-                                                  'total_hari': tripData['total_hari'],
-                                                  'hari_ke': hari['hari_ke'],
-                                                  'tempat': akt['tempat'],
-                                                  'kategori': akt['kategori'],
-                                                  'biaya': akt['biaya_raw'].toString(),
-                                                  'catatan': akt['catatan'],
-                                                  'startTime': _parseTime(akt['jam_mulai']),
-                                                  'endTime': _parseTime(akt['jam_selesai']),
-                                                },
-                                              );
-                                              if (result == true && context.mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text('Aktivitas ${akt['tempat']} berhasil diperbarui!')),
-                                                );
-                                                _refreshData();
-                                              }
-                                            },
-                                          ),
-                                          const SizedBox(width: 12),
-                                          IconButton(
-                                            constraints: const BoxConstraints(),
-                                            padding: EdgeInsets.zero,
-                                            icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
-                                            onPressed: () async {
-                                              await _controller.deleteActivity(akt['id']);
-                                              if (context.mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text('${akt['tempat']} dihapus')),
-                                                );
-                                                _refreshData();
-                                              }
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  if (akt['catatan'] != null && akt['catatan'].toString().isNotEmpty) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Catatan: ${akt['catatan']}',
-                                      style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                  final hari = activeHariList[index] as Map<String, dynamic>;
+                  return DayScheduleCard(
+                    hari: hari,
+                    primaryColor: primaryColor,
+                    onEditActivity: (akt) async {
+                      final result = await Navigator.pushNamed(
+                        context,
+                        '/activity-form',
+                        arguments: {
+                          'isEdit': true,
+                          'id': akt['id'],
+                          'trip_id': tripData['id'],
+                          'total_hari': tripData['total_hari'],
+                          'hari_ke': hari['hari_ke'],
+                          'tempat': akt['tempat'],
+                          'kategori': akt['kategori'],
+                          'biaya': akt['biaya_raw'].toString(),
+                          'catatan': akt['catatan'],
+                          'startTime': _parseTime(akt['jam_mulai']),
+                          'endTime': _parseTime(akt['jam_selesai']),
+                        },
+                      );
+                      if (result == true && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Aktivitas ${akt['tempat']} berhasil diperbarui!')),
+                        );
+                        _refreshData();
+                      }
+                    },
+                    onDeleteActivity: (akt) async {
+                      await _controller.deleteActivity(akt['id']);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${akt['tempat']} dihapus')),
+                        );
+                        _refreshData();
+                      }
+                    },
                   );
                 },
               ),

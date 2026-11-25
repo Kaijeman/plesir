@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
+import '../widgets/primary_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -121,6 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
+                margin: const EdgeInsets.only(bottom: 20),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -147,33 +149,37 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: primaryColor,
                       ),
                     ),
-                    const SizedBox(width: 16),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isLoggedIn ? _authController.userName : 'Pengguna Tamu',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            isLoggedIn ? _authController.userEmail : 'Penyimpanan Perangkat',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isLoggedIn ? Colors.grey.shade700 : Colors.grey,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isLoggedIn ? _authController.userName : 'Pengguna Tamu',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
-                          ),
-                        ],
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                isLoggedIn ? _authController.userEmail : 'Penyimpanan Perangkat',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isLoggedIn ? Colors.grey.shade700 : Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
 
               if (!isLoggedIn) ...[
                 Container(
+                  margin: const EdgeInsets.only(bottom: 20),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.amber.shade50,
@@ -183,53 +189,40 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     children: [
                       Icon(Icons.info_outline_rounded, color: Colors.amber.shade900, size: 24),
-                      const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          'Data perjalananmu tersimpan di HP. Hubungkan ke Google agar data aman jika aplikasi dihapus.',
-                          style: TextStyle(fontSize: 12, color: Colors.amber.shade900, height: 1.4),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: Text(
+                            'Data perjalananmu tersimpan di HP. Hubungkan ke Google agar data aman jika aplikasi dihapus.',
+                            style: TextStyle(fontSize: 12, color: Colors.amber.shade900, height: 1.4),
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
 
-                SizedBox(
-                  width: double.infinity,
+                PrimaryButton(
+                  label: _isLoading ? 'Menghubungkan...' : 'Masuk dengan Google',
+                  primaryColor: primaryColor,
+                  isLoading: _isLoading,
                   height: 50,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: _isLoading ? null : _handleGoogleLogin,
-                    icon: _isLoading
-                        ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                    )
-                        : Image.network(
-                      'https://cdn-icons-png.flaticon.com/512/300/300221.png',
-                      height: 22,
-                      width: 22,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.g_mobiledata_rounded, size: 28);
-                      },
-                    ),
-                    label: Text(
-                      _isLoading ? 'Menghubungkan...' : 'Masuk dengan Google',
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                    ),
+                  borderRadius: 12,
+                  elevation: 0,
+                  fontSize: 15,
+                  onPressed: _handleGoogleLogin,
+                  icon: Image.network(
+                    'https://cdn-icons-png.flaticon.com/512/300/300221.png',
+                    height: 22,
+                    width: 22,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.g_mobiledata_rounded, size: 28);
+                    },
                   ),
                 ),
               ] else ...[
                 Container(
+                  margin: const EdgeInsets.only(bottom: 24),
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -242,6 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Row(
                         children: [
                           Container(
+                            margin: const EdgeInsets.only(right: 8),
                             width: 10,
                             height: 10,
                             decoration: const BoxDecoration(
@@ -249,20 +243,20 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: BoxShape.circle,
                             ),
                           ),
-                          const SizedBox(width: 8),
                           const Text(
                             'Cadangan Online Aktif',
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Terakhir disinkronkan: $_lastSyncTime',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, bottom: 14),
+                        child: Text(
+                          'Terakhir disinkronkan: $_lastSyncTime',
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
                       ),
-                      const SizedBox(height: 14),
-                      SizedBox(
+                      Container(
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
@@ -283,9 +277,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
 
-                SizedBox(
+                Container(
                   width: double.infinity,
                   height: 48,
                   child: OutlinedButton.icon(
