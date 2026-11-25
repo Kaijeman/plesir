@@ -211,14 +211,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   elevation: 0,
                   fontSize: 15,
                   onPressed: _handleGoogleLogin,
-                  icon: Image.network(
-                    'https://cdn-icons-png.flaticon.com/512/300/300221.png',
-                    height: 22,
-                    width: 22,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.g_mobiledata_rounded, size: 28);
-                    },
-                  ),
                 ),
               ] else ...[
                 Container(
